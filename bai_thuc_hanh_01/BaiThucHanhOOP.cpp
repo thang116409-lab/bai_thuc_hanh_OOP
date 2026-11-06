@@ -1,158 +1,149 @@
 #include<bits/stdc++.h>
 using namespace std;
+const double TY_GIA = 26000; //Em xin được đổi 1 USD = 26000 VND ạ
 
-const double EXCHANGE_RATE = 26000; //Em xin được đổi 1 USD = 26000 VND ạ
-
-// Lop Vehicle: mot phuong tien do trong bai
+// Lop xe: mot phuong tien do trong bai
 class Vehicle {
 private:
-    int vehicleID;
-    string vehicleType;
-    int entryTime;
-    int parkingDuration;
-    double parkingFee;      // don vi VND
-    bool isOccupied;        // true neu dang chua du lieu xe that
-
-    // Gio cao diem
-    static bool isPeakHour(int hour) {
-        return (hour >= 6 && hour <= 9) || (hour >= 15 && hour <= 18);
+    int maXe;
+    string loaiXe;
+    int gioVao;
+    int soGioDo;
+    double phiDo;           // don vi VND
+    bool coXe;              // true neu dang chua du lieu xe that
+    static bool laGioCaoDiem(int gio) {
+        return (gio >= 6 && gio <= 9) || (gio >= 15 && gio <= 18);
     }
 
 public:
     //constructor, setter va menu
-    static bool isValidID(int id) {
-        return id > 0;
+    static bool maHopLe(int ma) {
+        return ma > 0;
     }
 
-    static bool isValidEntryTime(int time) {
-        return time >= 0 && time <= 23;
+    static bool gioVaoHopLe(int gio) {
+        return gio >= 0 && gio <= 23;
     }
 
-    static bool isValidDuration(int duration) {
-        return duration >= 1 && duration <= 23;
+    static bool soGioHopLe(int soGio) {
+        return soGio >= 1 && soGio <= 23;
     }
 
-    static bool isValidTimeRange(int time, int duration) {
-        return isValidEntryTime(time) && isValidDuration(duration) && time + duration <= 24;
+    static bool khoangGioHopLe(int gio, int soGio) {
+        return gioVaoHopLe(gio) && soGioHopLe(soGio) && gio + soGio <= 24;
     }
 
     // Doi loai xe ve dang chuan khong phan biet hoa thuong
-    static string normalizeType(const string& type) {
-        string result = type;
-        for (size_t i = 0; i < result.length(); i++) {
-            result[i] = tolower(result[i]);
+    static string chuanHoaLoai(const string& loai) {
+        string ketQua = loai;
+        for (size_t i = 0; i < ketQua.length(); i++) {
+            ketQua[i] = tolower(ketQua[i]);
         }
-        if (result == "car") return "Car";
-        if (result == "motorcycle") return "Motorcycle";
-        if (result == "bicycle") return "Bicycle";
+        if (ketQua == "car") return "Car";
+        if (ketQua == "motorcycle") return "Motorcycle";
+        if (ketQua == "bicycle") return "Bicycle";
         return "";
     }
 
-    static bool isValidType(const string& type) {
-        return normalizeType(type) != "";
+    static bool loaiHopLe(const string& loai) {
+        return chuanHoaLoai(loai) != "";
     }
 
     Vehicle() {
-        vehicleID = 0;
-        vehicleType = "Bicycle";
-        entryTime = 0;
-        parkingDuration = 1;
-        parkingFee = 0;
-        isOccupied = false;
+        maXe = 0;
+        loaiXe = "Bicycle";
+        gioVao = 0;
+        soGioDo = 1;
+        phiDo = 0;
+        coXe = false;
     }
-
-    Vehicle(int id, const string& type, int entry, int duration) {
-        vehicleID = 0;
-        vehicleType = "Bicycle";
-        entryTime = 0;
-        parkingDuration = 1;
-        parkingFee = 0;
-        isOccupied = false;
-
-        string t = normalizeType(type);
-        if (isValidID(id) && t != "" && isValidTimeRange(entry, duration)) {
-            vehicleID = id;
-            vehicleType = t;
-            entryTime = entry;
-            parkingDuration = duration;
-            isOccupied = true;
-            calculateFee();
+    Vehicle(int ma, const string& loai, int vao, int soGio) {
+        maXe = 0;
+        loaiXe = "Bicycle";
+        gioVao = 0;
+        soGioDo = 1;
+        phiDo = 0;
+        coXe = false;
+        string loaiChuan = chuanHoaLoai(loai);
+        if (maHopLe(ma) && loaiChuan != "" && khoangGioHopLe(vao, soGio)) {
+            maXe = ma;
+            loaiXe = loaiChuan;
+            gioVao = vao;
+            soGioDo = soGio;
+            coXe = true;
+            tinhPhi();
         }
     }
+    int layMaXe() const { return maXe; }
+    string layLoaiXe() const { return loaiXe; }
+    int layGioVao() const { return gioVao; }
+    int laySoGioDo() const { return soGioDo; }
+    double layPhiDo() const { return phiDo; }
+    bool layCoXe() const { return coXe; }
 
-    int getVehicleID() const { return vehicleID; }
-    string getVehicleType() const { return vehicleType; }
-    int getEntryTime() const { return entryTime; }
-    int getParkingDuration() const { return parkingDuration; }
-    double getParkingFee() const { return parkingFee; }
-    bool getIsOccupied() const { return isOccupied; }
-
-    bool setVehicleID(int id) {
-        if (!isValidID(id)) return false;
-        vehicleID = id;
+    bool datMaXe(int ma) {
+        if (!maHopLe(ma)) return false;
+        maXe = ma;
         return true;
     }
 
-    bool setVehicleType(const string& type) {
-        string t = normalizeType(type);
-        if (t == "") return false;
-        vehicleType = t;
-        calculateFee();
+    bool datLoaiXe(const string& loai) {
+        string loaiChuan = chuanHoaLoai(loai);
+        if (loaiChuan == "") return false;
+        loaiXe = loaiChuan;
+        tinhPhi();
         return true;
     }
 
-    bool setEntryTime(int time) {
-        if (!isValidTimeRange(time, parkingDuration)) return false;
-        entryTime = time;
-        calculateFee();
+    bool datGioVao(int gio) {
+        if (!khoangGioHopLe(gio, soGioDo)) return false;
+        gioVao = gio;
+        tinhPhi();
         return true;
     }
 
-    bool setParkingDuration(int duration) {
-        if (!isValidTimeRange(entryTime, duration)) return false;
-        parkingDuration = duration;
-        calculateFee();
+    bool datSoGioDo(int soGio) {
+        if (!khoangGioHopLe(gioVao, soGio)) return false;
+        soGioDo = soGio;
+        tinhPhi();
         return true;
     }
 
-    bool setParkingFee(double fee) {
-        if (fee < 0) return false;
-        parkingFee = fee;
+    bool datPhiDo(double phi) {
+        if (phi < 0) return false;
+        phiDo = phi;
         return true;
     }
 
-    bool setIsOccupied(bool status) {
-        if (status && !isValidID(vehicleID)) return false;
-        isOccupied = status;
-        calculateFee();
+    bool datCoXe(bool trangThai) {
+        if (trangThai && !maHopLe(maXe)) return false;
+        coXe = trangThai;
+        tinhPhi();
         return true;
     }
-
     // Tinh phi theo muc 3 cua de: tinh bang USD roi doi sang VND
-    void calculateFee() {
-        if (!isOccupied) {
-            parkingFee = 0;
+    void tinhPhi() {
+        if (!coXe) {
+            phiDo = 0;
             return;
         }
 
-        double price = 2;
-        if (vehicleType == "Car") price = 6;
-        else if (vehicleType == "Motorcycle") price = 4;
+        double donGia = 2;
+        if (loaiXe == "Car") donGia = 6;
+        else if (loaiXe == "Motorcycle") donGia = 4;
 
-        double rate = 0.95;
-        if (isPeakHour(entryTime)) rate = 1.30;
+        double heSo = 0.95;
+        if (laGioCaoDiem(gioVao)) heSo = 1.30;
+        int gioDau = soGioDo;
+        if (gioDau > 2) gioDau = 2;
+        int gioSau = soGioDo - gioDau;
 
-        int firstHours = parkingDuration;
-        if (firstHours > 2) firstHours = 2;
-        int lateHours = parkingDuration - firstHours;
+        double phiUSD = gioDau * donGia * heSo + gioSau * donGia * 0.90;
 
-        double feeUSD = firstHours * price * rate + lateHours * price * 0.90;
-
-        parkingFee = feeUSD * EXCHANGE_RATE;
+        phiDo = phiUSD * TY_GIA;
     }
-
     // In dong tieu de cot
-    static void displayHeader() {
+    static void inTieuDe() {
         cout << left << setw(12) << "Ma xe"
              << setw(16) << "Loai xe"
              << setw(12) << "Gio vao"
@@ -160,119 +151,118 @@ public:
              << "Phi do xe" << endl;
     }
 
-    void display() const {
-        cout << left << setw(12) << vehicleID
-             << setw(16) << vehicleType
-             << setw(12) << entryTime
-             << setw(16) << parkingDuration
-             << fixed << setprecision(0) << parkingFee << " VND" << endl;
+    void inXe() const {
+        cout << left << setw(12) << maXe
+             << setw(16) << loaiXe
+             << setw(12) << gioVao
+             << setw(16) << soGioDo
+             << fixed << setprecision(0) << phiDo << " VND" << endl;
     }
 };
-
 class ParkingLot {
 private:
-    int parkID;
-    char size;
-    Vehicle vehicle1;
-    Vehicle vehicle2;
-    Vehicle vehicle3;
-    bool hasVehicle1;       // true neu o 1 dang co xe
-    bool hasVehicle2;
-    bool hasVehicle3;
+    int maBai;
+    char kichThuoc;
+    Vehicle xe1;
+    Vehicle xe2;
+    Vehicle xe3;
+    bool coXe1;             // true neu o 1 dang co xe
+    bool coXe2;
+    bool coXe3;
 
 public:
-    static bool isValidSize(char sz) {
-        sz = toupper(sz);
-        return sz == 'S' || sz == 'M' || sz == 'L';
+    static bool kichThuocHopLe(char kt) {
+        kt = toupper(kt);
+        return kt == 'S' || kt == 'M' || kt == 'L';
     }
 
     ParkingLot() {
-        parkID = 0;
-        size = 'S';
-        hasVehicle1 = false;
-        hasVehicle2 = false;
-        hasVehicle3 = false;
+        maBai = 0;
+        kichThuoc = 'S';
+        coXe1 = false;
+        coXe2 = false;
+        coXe3 = false;
     }
 
-    ParkingLot(int id, char sz) {
-        parkID = 0;
-        size = 'S';
-        hasVehicle1 = false;
-        hasVehicle2 = false;
-        hasVehicle3 = false;
+    ParkingLot(int ma, char kt) {
+        maBai = 0;
+        kichThuoc = 'S';
+        coXe1 = false;
+        coXe2 = false;
+        coXe3 = false;
 
-        if (id > 0 && isValidSize(sz)) {
-            parkID = id;
-            size = toupper(sz);
+        if (ma > 0 && kichThuocHopLe(kt)) {
+            maBai = ma;
+            kichThuoc = toupper(kt);
         }
     }
 
-    int getParkID() const { return parkID; }
-    char getSize() const { return size; }
+    int layMaBai() const { return maBai; }
+    char layKichThuoc() const { return kichThuoc; }
 
     // Suc chua 
-    int getCapacity() const {
-        if (size == 'S') return 1;
-        if (size == 'M') return 2;
+    int laySucChua() const {
+        if (kichThuoc == 'S') return 1;
+        if (kichThuoc == 'M') return 2;
         return 3;
     }
 
-    int countVehicles() const {
-        int count = 0;
-        if (hasVehicle1) count++;
-        if (hasVehicle2) count++;
-        if (hasVehicle3) count++;
-        return count;
+    int demXe() const {
+        int dem = 0;
+        if (coXe1) dem++;
+        if (coXe2) dem++;
+        if (coXe3) dem++;
+        return dem;
     }
 
-    int freeSlots() const {
-        return getCapacity() - countVehicles();
+    int soOTrong() const {
+        return laySucChua() - demXe();
     }
 
     // Chi doi ma khi bai dang trong
-    bool setParkID(int id) {
-        if (id <= 0 || countVehicles() != 0) return false;
-        parkID = id;
+    bool datMaBai(int ma) {
+        if (ma <= 0 || demXe() != 0) return false;
+        maBai = ma;
         return true;
     }
 
     // Chi doi kich thuoc khi cac o dang co xe van nam trong suc chua moi
-    bool setSize(char sz) {
-        if (!isValidSize(sz)) return false;
-        sz = toupper(sz);
-        int newCapacity = 3;
-        if (sz == 'S') newCapacity = 1;
-        else if (sz == 'M') newCapacity = 2;
+    bool datKichThuoc(char kt) {
+        if (!kichThuocHopLe(kt)) return false;
+        kt = toupper(kt);
+        int sucChuaMoi = 3;
+        if (kt == 'S') sucChuaMoi = 1;
+        else if (kt == 'M') sucChuaMoi = 2;
 
-        if (newCapacity < 3 && hasVehicle3) return false;
-        if (newCapacity < 2 && hasVehicle2) return false;
-        size = sz;
+        if (sucChuaMoi < 3 && coXe3) return false;
+        if (sucChuaMoi < 2 && coXe2) return false;
+        kichThuoc = kt;
         return true;
     }
 
-    bool containsVehicle(int id) const {
-        if (hasVehicle1 && vehicle1.getVehicleID() == id) return true;
-        if (hasVehicle2 && vehicle2.getVehicleID() == id) return true;
-        if (hasVehicle3 && vehicle3.getVehicleID() == id) return true;
+    bool coChuaXe(int ma) const {
+        if (coXe1 && xe1.layMaXe() == ma) return true;
+        if (coXe2 && xe2.layMaXe() == ma) return true;
+        if (coXe3 && xe3.layMaXe() == ma) return true;
         return false;
     }
 
-    bool addVehicle(const Vehicle& v) {
-        if (!v.getIsOccupied()) return false;
-        if (containsVehicle(v.getVehicleID())) return false;
-        if (freeSlots() <= 0) return false;
+    bool themXe(const Vehicle& xe) {
+        if (!xe.layCoXe()) return false;
+        if (coChuaXe(xe.layMaXe())) return false;
+        if (soOTrong() <= 0) return false;
 
-        if (!hasVehicle1) {
-            vehicle1 = v;
-            hasVehicle1 = true;
+        if (!coXe1) {
+            xe1 = xe;
+            coXe1 = true;
         }
-        else if (getCapacity() >= 2 && !hasVehicle2) {
-            vehicle2 = v;
-            hasVehicle2 = true;
+        else if (laySucChua() >= 2 && !coXe2) {
+            xe2 = xe;
+            coXe2 = true;
         }
-        else if (getCapacity() >= 3 && !hasVehicle3) {
-            vehicle3 = v;
-            hasVehicle3 = true;
+        else if (laySucChua() >= 3 && !coXe3) {
+            xe3 = xe;
+            coXe3 = true;
         }
         else {
             return false;
@@ -281,172 +271,172 @@ public:
     }
 
     // Lay xe ra theo ma xe
-    bool removeVehicle(int vID) {
-        if (hasVehicle1 && vehicle1.getVehicleID() == vID) {
-            vehicle1 = Vehicle();
-            hasVehicle1 = false;
+    bool layXeRa(int maXe) {
+        if (coXe1 && xe1.layMaXe() == maXe) {
+            xe1 = Vehicle();
+            coXe1 = false;
             return true;
         }
-        if (hasVehicle2 && vehicle2.getVehicleID() == vID) {
-            vehicle2 = Vehicle();
-            hasVehicle2 = false;
+        if (coXe2 && xe2.layMaXe() == maXe) {
+            xe2 = Vehicle();
+            coXe2 = false;
             return true;
         }
-        if (hasVehicle3 && vehicle3.getVehicleID() == vID) {
-            vehicle3 = Vehicle();
-            hasVehicle3 = false;
+        if (coXe3 && xe3.layMaXe() == maXe) {
+            xe3 = Vehicle();
+            coXe3 = false;
             return true;
         }
         return false;
     }
     // Cac ham thong ke dung cho bao cao (menu 7 va 8)
-    int countByType(const string& type) const {
-        int count = 0;
-        if (hasVehicle1 && vehicle1.getVehicleType() == type) count++;
-        if (hasVehicle2 && vehicle2.getVehicleType() == type) count++;
-        if (hasVehicle3 && vehicle3.getVehicleType() == type) count++;
-        return count;
+    int demTheoLoai(const string& loai) const {
+        int dem = 0;
+        if (coXe1 && xe1.layLoaiXe() == loai) dem++;
+        if (coXe2 && xe2.layLoaiXe() == loai) dem++;
+        if (coXe3 && xe3.layLoaiXe() == loai) dem++;
+        return dem;
     }
 
-    double feeByType(const string& type) const {
-        double total = 0;
-        if (hasVehicle1 && vehicle1.getVehicleType() == type) total += vehicle1.getParkingFee();
-        if (hasVehicle2 && vehicle2.getVehicleType() == type) total += vehicle2.getParkingFee();
-        if (hasVehicle3 && vehicle3.getVehicleType() == type) total += vehicle3.getParkingFee();
-        return total;
+    double phiTheoLoai(const string& loai) const {
+        double tong = 0;
+        if (coXe1 && xe1.layLoaiXe() == loai) tong += xe1.layPhiDo();
+        if (coXe2 && xe2.layLoaiXe() == loai) tong += xe2.layPhiDo();
+        if (coXe3 && xe3.layLoaiXe() == loai) tong += xe3.layPhiDo();
+        return tong;
     }
 
-    double totalFee() const {
-        double total = 0;
-        if (hasVehicle1) total += vehicle1.getParkingFee();
-        if (hasVehicle2) total += vehicle2.getParkingFee();
-        if (hasVehicle3) total += vehicle3.getParkingFee();
-        return total;
+    double tongPhi() const {
+        double tong = 0;
+        if (coXe1) tong += xe1.layPhiDo();
+        if (coXe2) tong += xe2.layPhiDo();
+        if (coXe3) tong += xe3.layPhiDo();
+        return tong;
     }
 
     // In mot dong tom tat: ma bai, kich thuoc, so xe (dung cho menu 5)
-    void displaySummary() const {
-        cout << "Ma bai: " << parkID
-             << " | Kich thuoc: " << size
-             << " | So xe: " << countVehicles() << "/" << getCapacity() << endl;
+    void inTomTat() const {
+        cout << "Ma bai: " << maBai
+             << " | Kich thuoc: " << kichThuoc
+             << " | So xe: " << demXe() << "/" << laySucChua() << endl;
     }
 
     // In tom tat bai va danh sach xe hien co (dung cho menu 6)
-    void displayLotInfo() const {
+    void inThongTinBai() const {
         cout << endl;
-        displaySummary();
+        inTomTat();
 
-        if (countVehicles() == 0) {
+        if (demXe() == 0) {
             cout << "Bai do chua co xe." << endl;
             return;
         }
 
-        Vehicle::displayHeader();
-        if (hasVehicle1) vehicle1.display();
-        if (hasVehicle2) vehicle2.display();
-        if (hasVehicle3) vehicle3.display();
+        Vehicle::inTieuDe();
+        if (coXe1) xe1.inXe();
+        if (coXe2) xe2.inXe();
+        if (coXe3) xe3.inXe();
     }
 
     // In ma bai va cac xe thuoc loai can tim, khong in gi neu bai khong co xe loai do
-    void displayVehiclesByType(const string& type) const {
-        if (countByType(type) == 0) return;
+    void inXeTheoLoai(const string& loai) const {
+        if (demTheoLoai(loai) == 0) return;
 
-        cout << "\nBai do " << parkID << ":" << endl;
-        Vehicle::displayHeader();
-        if (hasVehicle1 && vehicle1.getVehicleType() == type) vehicle1.display();
-        if (hasVehicle2 && vehicle2.getVehicleType() == type) vehicle2.display();
-        if (hasVehicle3 && vehicle3.getVehicleType() == type) vehicle3.display();
+        cout << "\nBai do " << maBai << ":" << endl;
+        Vehicle::inTieuDe();
+        if (coXe1 && xe1.layLoaiXe() == loai) xe1.inXe();
+        if (coXe2 && xe2.layLoaiXe() == loai) xe2.inXe();
+        if (coXe3 && xe3.layLoaiXe() == loai) xe3.inXe();
     }
 };
 
 // Lop SystemInterface: nhap xuat console va dieu phoi chuong trinh
 class SystemInterface {
 private:
-    ParkingLot parkingLot1;
-    ParkingLot parkingLot2;
-    ParkingLot parkingLot3;
-    bool hasLot1;           
-    bool hasLot2;
-    bool hasLot3;
-    bool stop;              // true khi het du lieu nhap (EOF) de thoat chuong trinh
+    ParkingLot bai1;
+    ParkingLot bai2;
+    ParkingLot bai3;
+    bool coBai1;
+    bool coBai2;
+    bool coBai3;
+    bool dung;              // true khi het du lieu nhap (EOF) de thoat chuong trinh
 
     // Cac ham truy cap bai theo vi tri 1..3
-    bool lotExists(int pos) const {
-        if (pos == 1) return hasLot1;
-        if (pos == 2) return hasLot2;
-        return hasLot3;
+    bool baiTonTai(int viTri) const {
+        if (viTri == 1) return coBai1;
+        if (viTri == 2) return coBai2;
+        return coBai3;
     }
 
-    void setLotExists(int pos, bool value) {
-        if (pos == 1) hasLot1 = value;
-        else if (pos == 2) hasLot2 = value;
-        else hasLot3 = value;
+    void datBaiTonTai(int viTri, bool giaTri) {
+        if (viTri == 1) coBai1 = giaTri;
+        else if (viTri == 2) coBai2 = giaTri;
+        else coBai3 = giaTri;
     }
 
-    ParkingLot& lotAt(int pos) {
-        if (pos == 1) return parkingLot1;
-        if (pos == 2) return parkingLot2;
-        return parkingLot3;
+    ParkingLot& baiTai(int viTri) {
+        if (viTri == 1) return bai1;
+        if (viTri == 2) return bai2;
+        return bai3;
     }
 
-    const ParkingLot& lotAt(int pos) const {
-        if (pos == 1) return parkingLot1;
-        if (pos == 2) return parkingLot2;
-        return parkingLot3;
+    const ParkingLot& baiTai(int viTri) const {
+        if (viTri == 1) return bai1;
+        if (viTri == 2) return bai2;
+        return bai3;
     }
 
-    int countLots() const {
-        int count = 0;
-        if (hasLot1) count++;
-        if (hasLot2) count++;
-        if (hasLot3) count++;
-        return count;
+    int demBai() const {
+        int dem = 0;
+        if (coBai1) dem++;
+        if (coBai2) dem++;
+        if (coBai3) dem++;
+        return dem;
     }
     // Cac ham tim kiem tra ve vi tri 
-    int findLotByID(int id) const {
-        for (int pos = 1; pos <= 3; pos++) {
-            if (lotExists(pos) && lotAt(pos).getParkID() == id) return pos;
+    int timBaiTheoMa(int ma) const {
+        for (int viTri = 1; viTri <= 3; viTri++) {
+            if (baiTonTai(viTri) && baiTai(viTri).layMaBai() == ma) return viTri;
         }
         return 0;
     }
 
-    int findLotByVehicle(int vehicleID) const {
-        for (int pos = 1; pos <= 3; pos++) {
-            if (lotExists(pos) && lotAt(pos).containsVehicle(vehicleID)) return pos;
+    int timBaiTheoXe(int maXe) const {
+        for (int viTri = 1; viTri <= 3; viTri++) {
+            if (baiTonTai(viTri) && baiTai(viTri).coChuaXe(maXe)) return viTri;
         }
         return 0;
     }
 
-    int findEmptyPosition() const {
-        for (int pos = 1; pos <= 3; pos++) {
-            if (!lotExists(pos)) return pos;
+    int timViTriTrong() const {
+        for (int viTri = 1; viTri <= 3; viTri++) {
+            if (!baiTonTai(viTri)) return viTri;
         }
         return 0;
     }
-    int chooseBestLot() const {
-        int best = 0;
-        int fewestFree = 4;
-        for (int pos = 1; pos <= 3; pos++) {
-            if (lotExists(pos) && lotAt(pos).freeSlots() > 0) {
-                if (lotAt(pos).freeSlots() < fewestFree) {
-                    fewestFree = lotAt(pos).freeSlots();
-                    best = pos;
+    int chonBaiTot() const {
+        int viTriTot = 0;
+        int itTrongNhat = 4;
+        for (int viTri = 1; viTri <= 3; viTri++) {
+            if (baiTonTai(viTri) && baiTai(viTri).soOTrong() > 0) {
+                if (baiTai(viTri).soOTrong() < itTrongNhat) {
+                    itTrongNhat = baiTai(viTri).soOTrong();
+                    viTriTot = viTri;
                 }
             }
         }
-        return best;
+        return viTriTot;
     }
 
-    int readInt(const string& prompt) {
-        int x;
+    int docSoNguyen(const string& loiNhac) {
+        int so;
         while (true) {
-            cout << prompt;
-            if (cin >> x) {
+            cout << loiNhac;
+            if (cin >> so) {
                 cin.ignore(1000, '\n');
-                return x;
+                return so;
             }
             if (cin.eof()) {
-                stop = true;
+                dung = true;
                 return 0;
             }
             cin.clear();
@@ -454,154 +444,154 @@ private:
             cout << "Vui long nhap so nguyen." << endl;
         }
     }
-    string readString(const string& prompt) {
-        string s;
-        cout << prompt;
-        if (!(cin >> s)) {
-            stop = true;
+    string docChuoi(const string& loiNhac) {
+        string chuoi;
+        cout << loiNhac;
+        if (!(cin >> chuoi)) {
+            dung = true;
             return "";
         }
         cin.ignore(1000, '\n');
-        return s;
+        return chuoi;
     }
-    void printMoney(double money) const {
-        cout << fixed << setprecision(0) << money << " VND";
+    void inTien(double tien) const {
+        cout << fixed << setprecision(0) << tien << " VND";
     }
 
     // Dem so xe va tong phi cua mot loai xe tren toan he thong
-    void summarizeByType(const string& type, int& count, double& total) const {
-        count = 0;
-        total = 0;
-        for (int pos = 1; pos <= 3; pos++) {
-            if (lotExists(pos)) {
-                count += lotAt(pos).countByType(type);
-                total += lotAt(pos).feeByType(type);
+    void thongKeTheoLoai(const string& loai, int& dem, double& tong) const {
+        dem = 0;
+        tong = 0;
+        for (int viTri = 1; viTri <= 3; viTri++) {
+            if (baiTonTai(viTri)) {
+                dem += baiTai(viTri).demTheoLoai(loai);
+                tong += baiTai(viTri).phiTheoLoai(loai);
             }
         }
     }
     // In phi trung binh cua mot loai xe tren toan he thong
-    void printAverageByType(const string& type) const {
-        int count;
-        double total;
-        summarizeByType(type, count, total);
+    void inTrungBinhTheoLoai(const string& loai) const {
+        int dem;
+        double tong;
+        thongKeTheoLoai(loai, dem, tong);
 
-        cout << type << ": ";
-        if (count == 0) {
+        cout << loai << ": ";
+        if (dem == 0) {
             cout << "Khong co xe" << endl;
         }
         else {
-            cout << count << " xe, trung binh ";
-            printMoney(total / count);
+            cout << dem << " xe, trung binh ";
+            inTien(tong / dem);
             cout << "/xe" << endl;
         }
     }
 
     // In so xe, tong phi va phi trung binh cua mot loai xe trong mot bai
-    void printTypeInLot(const ParkingLot& lot, const string& type) const {
-        int count = lot.countByType(type);
-        double total = lot.feeByType(type);
+    void inLoaiTrongBai(const ParkingLot& bai, const string& loai) const {
+        int dem = bai.demTheoLoai(loai);
+        double tong = bai.phiTheoLoai(loai);
 
-        cout << "  " << type << ": ";
-        if (count == 0) {
+        cout << "  " << loai << ": ";
+        if (dem == 0) {
             cout << "Khong co xe" << endl;
         }
         else {
-            cout << count << " xe, tong phi ";
-            printMoney(total);
+            cout << dem << " xe, tong phi ";
+            inTien(tong);
             cout << ", trung binh ";
-            printMoney(total / count);
+            inTien(tong / dem);
             cout << "/xe" << endl;
         }
     }
 public:
     SystemInterface() {
-        hasLot1 = false;
-        hasLot2 = false;
-        hasLot3 = false;
-        stop = false;
+        coBai1 = false;
+        coBai2 = false;
+        coBai3 = false;
+        dung = false;
     }
 
     // Menu 1: kiem tra tung dieu kien
-    void createLot() {
-        if (countLots() == 3) {
+    void taoBai() {
+        if (demBai() == 3) {
             cout << "He thong da co toi da 3 bai do." << endl;
             return;
         }
-        int id = readInt("Nhap ma bai do: ");
-        if (stop) return;
-        if (id <= 0) {
+        int maBai = docSoNguyen("Nhap ma bai do: ");
+        if (dung) return;
+        if (maBai <= 0) {
             cout << "Ma bai phai lon hon 0." << endl;
             return;
         }
-        if (findLotByID(id) != 0) {
+        if (timBaiTheoMa(maBai) != 0) {
             cout << "Ma bai do da ton tai." << endl;
             return;
         }
-        string sz = readString("Nhap kich thuoc (S/M/L): ");
-        if (stop) return;
-        if (sz.length() != 1 || !ParkingLot::isValidSize(sz[0])) {
+        string kichThuoc = docChuoi("Nhap kich thuoc (S/M/L): ");
+        if (dung) return;
+        if (kichThuoc.length() != 1 || !ParkingLot::kichThuocHopLe(kichThuoc[0])) {
             cout << "Kich thuoc khong hop le." << endl;
             return;
         }
 
-        int pos = findEmptyPosition();
-        lotAt(pos) = ParkingLot(id, sz[0]);
-        setLotExists(pos, true);
+        int viTri = timViTriTrong();
+        baiTai(viTri) = ParkingLot(maBai, kichThuoc[0]);
+        datBaiTonTai(viTri, true);
         cout << "Tao bai do thanh cong." << endl;
     }
 
     // Menu 2: nhap va kiem tra thong tin xe, xep bai 
-    void addVehicleToLot() {
-        if (countLots() == 0) {
+    void themXeVaoBai() {
+        if (demBai() == 0) {
             cout << "Hay tao bai do truoc." << endl;
             return;
         }
-        if (chooseBestLot() == 0) {
+        if (chonBaiTot() == 0) {
             cout << "Tat ca bai do deu da day." << endl;
             return;
         }
-        int id = readInt("Nhap ma xe: ");
-        if (stop) return;
-        if (!Vehicle::isValidID(id)) {
+        int maXe = docSoNguyen("Nhap ma xe: ");
+        if (dung) return;
+        if (!Vehicle::maHopLe(maXe)) {
             cout << "Ma xe phai lon hon 0." << endl;
             return;
         }
-        if (findLotByVehicle(id) != 0) {
+        if (timBaiTheoXe(maXe) != 0) {
             cout << "Ma xe da ton tai." << endl;
             return;
         }
 
-        string type = readString("Nhap loai xe (Car/Motorcycle/Bicycle): ");
-        if (stop) return;
-        if (!Vehicle::isValidType(type)) {
+        string loaiXe = docChuoi("Nhap loai xe (Car/Motorcycle/Bicycle): ");
+        if (dung) return;
+        if (!Vehicle::loaiHopLe(loaiXe)) {
             cout << "Loai xe khong hop le." << endl;
             return;
         }
 
-        int entry = readInt("Nhap gio vao (0-23): ");
-        if (stop) return;
-        if (!Vehicle::isValidEntryTime(entry)) {
+        int gioVao = docSoNguyen("Nhap gio vao (0-23): ");
+        if (dung) return;
+        if (!Vehicle::gioVaoHopLe(gioVao)) {
             cout << "Gio vao khong hop le." << endl;
             return;
         }
-        int duration = readInt("Nhap so gio do (1-23): ");
-        if (stop) return;
-        if (!Vehicle::isValidDuration(duration)) {
+        int soGioDo = docSoNguyen("Nhap so gio do (1-23): ");
+        if (dung) return;
+        if (!Vehicle::soGioHopLe(soGioDo)) {
             cout << "So gio do khong hop le." << endl;
             return;
         }
-        if (!Vehicle::isValidTimeRange(entry, duration)) {
+        if (!Vehicle::khoangGioHopLe(gioVao, soGioDo)) {
             cout << "Khong cho phep do xe qua dem." << endl;
             return;
         }
 
-        Vehicle v(id, type, entry, duration);
-        int pos = chooseBestLot();
+        Vehicle xe(maXe, loaiXe, gioVao, soGioDo);
+        int viTri = chonBaiTot();
 
-        if (lotAt(pos).addVehicle(v)) {
-            cout << "Them xe thanh cong vao bai " << lotAt(pos).getParkID() << "." << endl;
+        if (baiTai(viTri).themXe(xe)) {
+            cout << "Them xe thanh cong vao bai " << baiTai(viTri).layMaBai() << "." << endl;
             cout << "Phi do xe: ";
-            printMoney(v.getParkingFee());
+            inTien(xe.layPhiDo());
             cout << endl;
         }
         else {
@@ -610,117 +600,115 @@ public:
     }
 
     // Menu 3: xoa bai 
-    void deleteLot() {
-        int id = readInt("Nhap ma bai do can xoa: ");
-        if (stop) return;
+    void xoaBai() {
+        int maBai = docSoNguyen("Nhap ma bai do can xoa: ");
+        if (dung) return;
 
-        int pos = findLotByID(id);
-        if (pos == 0) {
+        int viTri = timBaiTheoMa(maBai);
+        if (viTri == 0) {
             cout << "Khong tim thay bai do." << endl;
             return;
         }
 
-        lotAt(pos) = ParkingLot();
-        setLotExists(pos, false);
+        baiTai(viTri) = ParkingLot();
+        datBaiTonTai(viTri, false);
         cout << "Da xoa bai do va cac xe trong bai." << endl;
     }
 
     // Menu 4: tim bai chua xe roi lay xe ra
-    void removeVehicleFromLot() {
-        int id = readInt("Nhap ma xe can lay ra: ");
-        if (stop) return;
+    void layXeRaKhoiBai() {
+        int maXe = docSoNguyen("Nhap ma xe can lay ra: ");
+        if (dung) return;
 
-        int pos = findLotByVehicle(id);
-        if (pos == 0) {
+        int viTri = timBaiTheoXe(maXe);
+        if (viTri == 0) {
             cout << "Khong tim thay xe." << endl;
             return;
         }
 
-        lotAt(pos).removeVehicle(id);
-        cout << "Da lay xe ra khoi bai " << lotAt(pos).getParkID() << "." << endl;
+        baiTai(viTri).layXeRa(maXe);
+        cout << "Da lay xe ra khoi bai " << baiTai(viTri).layMaBai() << "." << endl;
     }
 
     // Menu 5
-    void displayAllLots() const {
-        if (countLots() == 0) {
+    void hienThiTatCaBai() const {
+        if (demBai() == 0) {
             cout << "Chua co bai do nao." << endl;
             return;
         }
 
         cout << "\n===== DANH SACH BAI DO =====" << endl;
-        for (int pos = 1; pos <= 3; pos++) {
-            if (lotExists(pos)) lotAt(pos).displaySummary();
+        for (int viTri = 1; viTri <= 3; viTri++) {
+            if (baiTonTai(viTri)) baiTai(viTri).inTomTat();
         }
     }
 
     // Menu 6
-    void displayVehiclesByLot() {
-        int id = readInt("Nhap ma bai do: ");
-        if (stop) return;
+    void hienThiXeTheoBai() {
+        int maBai = docSoNguyen("Nhap ma bai do: ");
+        if (dung) return;
 
-        int pos = findLotByID(id);
-        if (pos == 0) {
+        int viTri = timBaiTheoMa(maBai);
+        if (viTri == 0) {
             cout << "Khong tim thay bai do." << endl;
             return;
         }
 
-        lotAt(pos).displayLotInfo();
-    }
-    // Menu 7: in ten bai, tieu de cot
-    void displayVehiclesByType() {
-        string type = readString("Nhap loai xe (Car/Motorcycle/Bicycle): ");
-        if (stop) return;
-        if (!Vehicle::isValidType(type)) {
+        baiTai(viTri).inThongTinBai();
+    }    // Menu 7: in ten bai, tieu de cot
+    void hienThiXeTheoLoai() {
+        string loaiXe = docChuoi("Nhap loai xe (Car/Motorcycle/Bicycle): ");
+        if (dung) return;
+        if (!Vehicle::loaiHopLe(loaiXe)) {
             cout << "Loai xe khong hop le." << endl;
             return;
         }
-
-        type = Vehicle::normalizeType(type);
-        int count;
-        double total;
-        summarizeByType(type, count, total);
-        if (count == 0) {
+        loaiXe = Vehicle::chuanHoaLoai(loaiXe);
+        int dem;
+        double tong;
+        thongKeTheoLoai(loaiXe, dem, tong);
+        if (dem == 0) {
             cout << "Khong co xe thuoc loai nay." << endl;
             return;
         }
 
-        for (int pos = 1; pos <= 3; pos++) {
-            if (lotExists(pos)) lotAt(pos).displayVehiclesByType(type);
+        for (int viTri = 1; viTri <= 3; viTri++) {
+            if (baiTonTai(viTri)) baiTai(viTri).inXeTheoLoai(loaiXe);
         }
     }
     // Menu 8: phi trung binh theo loai xe toan he thong, chi tiet tung bai
-    void displayFeeReport() const {
+    void hienThiBaoCaoPhi() const {
         cout << "\n===== BAO CAO PHI TOAN HE THONG =====" << endl;
-        printAverageByType("Car");
-        printAverageByType("Motorcycle");
-        printAverageByType("Bicycle");
+        inTrungBinhTheoLoai("Car");
+        inTrungBinhTheoLoai("Motorcycle");
+        inTrungBinhTheoLoai("Bicycle");
 
         cout << "\n===== PHAN TICH THEO TUNG BAI =====" << endl;
-        double allFee = 0;
-        int allVehicles = 0;
-        for (int pos = 1; pos <= 3; pos++) {
-            if (lotExists(pos)) {
-                cout << "\nBai " << lotAt(pos).getParkID() << ":" << endl;
-                printTypeInLot(lotAt(pos), "Car");
-                printTypeInLot(lotAt(pos), "Motorcycle");
-                printTypeInLot(lotAt(pos), "Bicycle");
+        double tongPhiHeThong = 0;
+        int tongSoXe = 0;
+        for (int viTri = 1; viTri <= 3; viTri++) {
+            if (baiTonTai(viTri)) {
+                cout << "\nBai " << baiTai(viTri).layMaBai() << ":" << endl;
+                inLoaiTrongBai(baiTai(viTri), "Car");
+                inLoaiTrongBai(baiTai(viTri), "Motorcycle");
+                inLoaiTrongBai(baiTai(viTri), "Bicycle");
                 cout << "  Tong phi bai: ";
-                printMoney(lotAt(pos).totalFee());
+                inTien(baiTai(viTri).tongPhi());
                 cout << endl;
 
-                allFee += lotAt(pos).totalFee();
-                allVehicles += lotAt(pos).countVehicles();
+                tongPhiHeThong += baiTai(viTri).tongPhi();
+                tongSoXe += baiTai(viTri).demXe();
             }
         }
         cout << "\nTong phi toan he thong: ";
-        printMoney(allFee);
+        inTien(tongPhiHeThong);
         cout << endl;
-        cout << "Tong so xe dang do: " << allVehicles << endl;
+        cout << "Tong so xe dang do: " << tongSoXe << endl;
     }
 
-    void runMenu() {
-        int choice = 0;
-        while (!stop && choice != 9) {
+    void chayMenu() {
+        int luaChon = 0;
+        while (!dung && luaChon != 9) {
             cout << "\n========== QUAN LY BAI DO XE ==========" << endl;
             cout << "1. Tao bai do xe moi" << endl;
             cout << "2. Them xe vao bai do" << endl;
@@ -732,18 +720,17 @@ public:
             cout << "8. Bao cao phi do xe" << endl;
             cout << "9. Thoat chuong trinh" << endl;
 
-            choice = readInt("Nhap lua chon: ");
-            if (stop) break;
-
-            switch (choice) {
-            case 1: createLot(); break;
-            case 2: addVehicleToLot(); break;
-            case 3: deleteLot(); break;
-            case 4: removeVehicleFromLot(); break;
-            case 5: displayAllLots(); break;
-            case 6: displayVehiclesByLot(); break;
-            case 7: displayVehiclesByType(); break;
-            case 8: displayFeeReport(); break;
+            luaChon = docSoNguyen("Nhap lua chon: ");
+            if (dung) break;
+            switch (luaChon) {
+            case 1: taoBai(); break;
+            case 2: themXeVaoBai(); break;
+            case 3: xoaBai(); break;
+            case 4: layXeRaKhoiBai(); break;
+            case 5: hienThiTatCaBai(); break;
+            case 6: hienThiXeTheoBai(); break;
+            case 7: hienThiXeTheoLoai(); break;
+            case 8: hienThiBaoCaoPhi(); break;
             case 9: cout << "Da thoat chuong trinh." << endl; break;
             default: cout << "Lua chon khong hop le." << endl;
             }
@@ -753,6 +740,6 @@ public:
 
 int main() {
     SystemInterface app;
-    app.runMenu();
+    app.chayMenu();
     return 0;
 }
