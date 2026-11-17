@@ -1,9 +1,5 @@
-#include <iostream>
-#include <string>
-#include <iomanip>
-#include <limits>
-#include <cstdlib>
-#include <ctime>
+#include<bits/stdc++.h>
+
 using namespace std;
 
 class phuong_tien {
